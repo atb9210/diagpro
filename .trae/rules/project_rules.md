@@ -31,7 +31,7 @@ Questo documento definisce le regole e le linee guida fondamentali che l'assiste
     - `fix: Corretto calcolo del totale ordine`
     - `docs: Aggiornata guida di Filament`
     - `refactor: Semplificata logica nel servizio di spedizione`
-- **Push Frequenti:** Esegui il push delle modifiche dopo ogni commit significativo per mantenere il repository remoto aggiornato.
+- **Push Frequenti:** Chiedi il push delle modifiche dopo ogni commit significativo per mantenere il repository remoto aggiornato.
 
 ## 5. Regole Generali
 

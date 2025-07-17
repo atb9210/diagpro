@@ -10,6 +10,8 @@ class Spedizione extends Model
 {
     use HasFactory;
     
+    protected $table = 'spedizioni';
+    
     protected $fillable = [
         'ordini_id',
         'corriere',

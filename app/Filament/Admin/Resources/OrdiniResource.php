@@ -280,10 +280,10 @@ class OrdiniResource extends Resource
                 Tables\Columns\TextColumn::make('link_ordine')
                     ->label('Link')
                     ->icon('heroicon-m-link')
-                    ->url(fn (Ordini $record): string => $record->link_ordine)
+                    ->url(fn (Ordini $record): ?string => $record->link_ordine)
                     ->openUrlInNewTab()
                     ->toggleable()
-                    ->formatStateUsing(fn ($state) => 'VAI'),
+                    ->formatStateUsing(fn ($state) => $state ? 'VAI' : '-'),
                 Tables\Columns\TextColumn::make('prezzo_vendita')
                     ->numeric()
                     ->sortable()
@@ -368,78 +368,7 @@ class OrdiniResource extends Resource
         ];
     }
 
-    public static function mutateFormDataBeforeFill(array $data): array
-    {
-        $record = Ordini::find($data['id']);
-        if ($record) {
-            $prodotti = $record->prodotti->map(function ($prodotto) {
-                return [
-                    'prodotto_id' => $prodotto->id,
-                    'quantita' => $prodotto->pivot->quantita,
-                    'prezzo_unitario' => $prodotto->pivot->prezzo_unitario,
-                    'costo' => $prodotto->pivot->costo,
-                ];
-            })->toArray();
-            $data['prodotti'] = $prodotti;
 
-            $abbonamenti = $record->abbonamenti->map(function ($abbonamento) {
-                $data_inizio = $abbonamento->pivot->data_inizio;
-                $data_scadenza = $data_inizio ? date('Y-m-d', strtotime($data_inizio . ' + ' . $abbonamento->durata . ' days')) : null;
-                return [
-                    'abbonamento_id' => $abbonamento->id,
-                    'prezzo' => $abbonamento->pivot->prezzo,
-                    'costo' => $abbonamento->pivot->costo,
-                    'data_inizio' => $data_inizio,
-                    'data_scadenza' => $data_scadenza,
-                ];
-            })->toArray();
-            $data['abbonamenti'] = $abbonamenti;
-        }
 
-        return $data;
-    }
 
-    public static function afterCreate(Model $record, array $data): void
-    {
-        static::handleRepeaterSync($record, $data);
-        $record->calculateAndSaveCostoProdotto();
-    }
-
-    public static function afterUpdate(Model $record, array $data): void
-    {
-        static::handleRepeaterSync($record, $data);
-        $record->calculateAndSaveCostoProdotto();
-    }
-
-    private static function handleRepeaterSync(Model $record, array $data): void
-    {
-
-        // Sync prodotti
-        $prodottiToSync = [];
-        if (isset($data['prodotti'])) {
-            foreach ($data['prodotti'] as $prodottoData) {
-                if(empty($prodottoData['prodotto_id'])) continue;
-                $prodottiToSync[$prodottoData['prodotto_id']] = [
-                    'quantita' => $prodottoData['quantita'],
-                    'prezzo_unitario' => $prodottoData['prezzo_unitario'],
-                    'costo' => $prodottoData['costo'],
-                ];
-            }
-        }
-        $record->prodotti()->sync($prodottiToSync);
-
-        // Sync abbonamenti
-        $abbonamentiToSync = [];
-        if (isset($data['abbonamenti'])) {
-            foreach ($data['abbonamenti'] as $abbonamentoData) {
-                if(empty($abbonamentoData['abbonamento_id'])) continue;
-                $abbonamentiToSync[$abbonamentoData['abbonamento_id']] = [
-                    'prezzo' => $abbonamentoData['prezzo'],
-                    'data_inizio' => $abbonamentoData['data_inizio'],
-                    'costo' => $abbonamentoData['costo'],
-                ];
-            }
-        }
-        $record->abbonamenti()->sync($abbonamentiToSync);
-    }
 }
