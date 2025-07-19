@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\ProdottoResource\Pages;
 
 use App\Filament\Admin\Resources\ProdottoResource;
+use App\Filament\Admin\Resources\ProdottoResource\Widgets\ProdottiStatsWidget;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -14,6 +15,13 @@ class ListProdottos extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            ProdottiStatsWidget::class,
         ];
     }
 }

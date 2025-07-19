@@ -13,9 +13,9 @@ class Ordini extends Model
     use HasFactory;
     
     protected $fillable = [
+        'data',
         'cliente_id',
         'traffic_source_id',
-        'data',
         'tipo_vendita',
         'link_ordine',
         'prezzo_vendita',
@@ -25,7 +25,9 @@ class Ordini extends Model
         'altri_costi',
         'margine',
         'vat',
-        'note'
+        'note',
+        'status',
+        'payment_status',
     ];
     
     protected $casts = [
@@ -72,6 +74,10 @@ class Ordini extends Model
     {
         return $this->belongsToMany(Abbonamento::class, 'ordini_abbonamento', 'ordini_id', 'abbonamento_id')
                     ->withPivot('data_inizio', 'data_fine', 'prezzo', 'attivo', 'costo')
+                    ->withCasts([
+                        'data_inizio' => 'date',
+                        'data_fine' => 'date',
+                    ])
                     ->withTimestamps();
     }
     

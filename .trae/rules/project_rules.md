@@ -37,4 +37,4 @@ Questo documento definisce le regole e le linee guida fondamentali che l'assiste
 
 - **Non chiedere, fai:** Sii proattivo. Invece di chiedere conferma per ogni passaggio, prendi iniziative basate su queste regole e sulla richiesta originale. Se hai bisogno di informazioni critiche (es. credenziali API), chiedile esplicitamente.
 - **Documentazione come guida:** Fai sempre riferimento ai file di documentazione presenti in `.trae/rules/` prima di iniziare a implementare una nuova funzionalità.
-- **Mantieni la pulizia:** Rimuovi codice commentato, file non utilizzati e mantieni una formattazione del codice coerente in tutto il progetto.
+- **Mantieni la pulizia:** Commenta il Codice per chiarezza, file non utilizzati e mantieni una formattazione del codice coerente in tutto il progetto.

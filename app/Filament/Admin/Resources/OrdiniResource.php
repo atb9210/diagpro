@@ -23,6 +23,14 @@ class OrdiniResource extends Resource
     protected static ?string $model = Ordini::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    
+    protected static ?string $navigationLabel = 'Ordini';
+    
+    protected static ?string $modelLabel = 'Ordine';
+    
+    protected static ?string $pluralModelLabel = 'Ordini';
+    
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -79,6 +87,33 @@ class OrdiniResource extends Resource
                                 'contrassegno' => 'Contrassegno',
                             ])
                             ->required(),
+                        Forms\Components\Select::make('status')
+                            ->label('Status Ordine')
+                            ->options([
+                                'da_processare' => 'Da Processare',
+                                'imballato' => 'Imballato',
+                                'spedito' => 'Spedito',
+                                'rimborsato' => 'Rimborsato',
+                                'consegnato' => 'Consegnato',
+                                'reso' => 'Reso',
+                                'sostituzione' => 'Sostituzione',
+                            ])
+                            ->default('da_processare')
+                            ->required(),
+                        Forms\Components\Select::make('payment_status')
+                            ->label('Status Pagamento')
+                            ->options([
+                                'pending' => 'In Attesa',
+                                'processing' => 'In Elaborazione',
+                                'paid' => 'Pagato',
+                                'failed' => 'Fallito',
+                                'cancelled' => 'Annullato',
+                                'refunded' => 'Rimborsato',
+                                'partially_refunded' => 'Parzialmente Rimborsato',
+                                'chargeback' => 'Chargeback',
+                            ])
+                            ->default('pending')
+                            ->required(),
                         Forms\Components\TextInput::make('link_ordine')
                             ->url()
                             ->maxLength(255),
@@ -87,7 +122,7 @@ class OrdiniResource extends Resource
                             ->inline(false),
                         Forms\Components\Textarea::make('note')
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(3),
 
                 Forms\Components\Section::make('Prodotti e Abbonamenti')
                     ->schema([
@@ -211,6 +246,8 @@ class OrdiniResource extends Resource
                             ])->columns(2),
                     ]),
 
+
+
                 Forms\Components\Section::make('Costi e Margine')
                     ->schema([
                         Forms\Components\TextInput::make('prezzo_vendita')
@@ -255,69 +292,146 @@ class OrdiniResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->striped()
+            ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100])
+            ->deferLoading()
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('Nuovo Ordine'),
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('data')
-                    ->date()
+                    ->date('d/m/Y')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('100px'),
                 Tables\Columns\TextColumn::make('cliente.nome')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->limit(20)
+                    ->tooltip(function (\App\Models\Ordini $record): ?string {
+                        return $record->cliente?->nome;
+                    }),
                 Tables\Columns\ImageColumn::make('trafficSource.icona')
                     ->label('Sorgente')
                     ->circular()
                     ->disk('public')
                     ->defaultImageUrl(url('/images/default-icon.svg'))
-                    ->toggleable(),
+                    ->toggleable()
+                    ->size(32),
                 Tables\Columns\BadgeColumn::make('tipo_vendita')
                     ->colors([
                         'info' => 'appuntamento',
                         'success' => 'online',
                         'warning' => 'contrassegno',
                     ])
-                    ->toggleable(),
+                    ->toggleable()
+                    ->size('sm'),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'da_processare' => 'Da Processare',
+                        'imballato' => 'Imballato',
+                        'spedito' => 'Spedito',
+                        'rimborsato' => 'Rimborsato',
+                        'consegnato' => 'Consegnato',
+                        'reso' => 'Reso',
+                        'sostituzione' => 'Sostituzione',
+                        default => $state,
+                    })
+                    ->colors([
+                        'gray' => 'da_processare',
+                        'warning' => 'imballato',
+                        'success' => ['spedito', 'consegnato'],
+                        'danger' => ['rimborsato', 'reso'],
+                        'info' => 'sostituzione',
+                    ])
+                    ->toggleable()
+                    ->size('sm'),
+                Tables\Columns\BadgeColumn::make('payment_status')
+                    ->label('Pagamento')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'In Attesa',
+                        'processing' => 'In Elaborazione',
+                        'paid' => 'Pagato',
+                        'failed' => 'Fallito',
+                        'cancelled' => 'Annullato',
+                        'refunded' => 'Rimborsato',
+                        'partially_refunded' => 'Parz. Rimborsato',
+                        'chargeback' => 'Chargeback',
+                        default => $state,
+                    })
+                    ->colors([
+                        'gray' => 'pending',
+                        'warning' => 'processing',
+                        'success' => 'paid',
+                        'danger' => ['failed', 'cancelled', 'chargeback'],
+                        'info' => ['refunded', 'partially_refunded'],
+                    ])
+                    ->toggleable()
+                    ->size('sm'),
                 Tables\Columns\TextColumn::make('link_ordine')
                     ->label('Link')
                     ->icon('heroicon-m-link')
                     ->url(fn (Ordini $record): ?string => $record->link_ordine)
                     ->openUrlInNewTab()
                     ->toggleable()
-                    ->formatStateUsing(fn ($state) => $state ? 'VAI' : '-'),
+                    ->formatStateUsing(fn ($state) => $state ? 'VAI' : '-')
+                    ->width('60px')
+                    ->alignment('center'),
                 Tables\Columns\TextColumn::make('prezzo_vendita')
+                    ->label('Vendita')
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('costo_marketing')
+                    ->label('Marketing')
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('costo_prodotto')
+                    ->label('Prodotto')
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('costo_spedizione')
+                    ->label('Spedizione')
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('altri_costi')
+                    ->label('Altri')
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('80px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('costi_totali')
-                    ->label('Totale Costi')
+                    ->label('Tot. Costi')
                     ->numeric()
                     ->state(function (Ordini $record): float {
                         return $record->costo_marketing + $record->costo_prodotto + $record->costo_spedizione + $record->altri_costi;
                     })
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\TextColumn::make('margine')
                     ->numeric()
                     ->state(function (Ordini $record): float {
@@ -326,21 +440,81 @@ class OrdiniResource extends Resource
                     ->sortable()
                     ->money('EUR')
                     ->color('success')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('90px')
+                    ->alignment('right'),
                 Tables\Columns\IconColumn::make('vat')
                     ->boolean()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('60px')
+                    ->alignment('center'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Creato')
+                    ->dateTime('d/m H:i')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->width('100px'),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Aggiornato')
+                    ->dateTime('d/m H:i')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->width('100px'),
             ])
             ->filters([
-                //
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Data da'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Data fino'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('data', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('data', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = 'Da: ' . \Carbon\Carbon::parse($data['created_from'])->format('d/m/Y');
+                        }
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = 'Fino: ' . \Carbon\Carbon::parse($data['created_until'])->format('d/m/Y');
+                        }
+                        return $indicators;
+                    }),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'da_processare' => 'Da Processare',
+                        'imballato' => 'Imballato',
+                        'spedito' => 'Spedito',
+                        'rimborsato' => 'Rimborsato',
+                        'consegnato' => 'Consegnato',
+                        'reso' => 'Reso',
+                        'sostituzione' => 'Sostituzione',
+                    ])
+                    ->multiple(),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label('Status Pagamento')
+                    ->options([
+                        'pending' => 'In Attesa',
+                        'processing' => 'In Elaborazione',
+                        'paid' => 'Pagato',
+                        'failed' => 'Fallito',
+                        'cancelled' => 'Annullato',
+                        'refunded' => 'Rimborsato',
+                        'partially_refunded' => 'Parzialmente Rimborsato',
+                        'chargeback' => 'Chargeback',
+                    ])
+                    ->multiple(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -364,11 +538,8 @@ class OrdiniResource extends Resource
         return [
             'index' => Pages\ListOrdinis::route('/'),
             'create' => Pages\CreateOrdini::route('/create'),
+            'view' => Pages\ViewOrdini::route('/{record}'),
             'edit' => Pages\EditOrdini::route('/{record}/edit'),
         ];
     }
-
-
-
-
 }

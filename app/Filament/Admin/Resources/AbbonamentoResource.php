@@ -24,6 +24,8 @@ class AbbonamentoResource extends Resource
     protected static ?string $modelLabel = 'Abbonamento';
     
     protected static ?string $pluralModelLabel = 'Abbonamenti';
+    
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {

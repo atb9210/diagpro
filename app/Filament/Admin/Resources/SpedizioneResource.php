@@ -25,6 +25,8 @@ class SpedizioneResource extends Resource
     protected static ?string $modelLabel = 'Spedizione';
     
     protected static ?string $pluralModelLabel = 'Spedizioni';
+    
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {

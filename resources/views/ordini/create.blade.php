@@ -291,7 +291,7 @@
                                 <select name="abbonamenti[${abbonamentoIndex}][id]" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                     <option value="">Seleziona un abbonamento</option>
                                     @foreach($abbonamenti as $abbonamento)
-                                        <option value="{{ $abbonamento->id }}" data-prezzo="{{ $abbonamento->prezzo }}">{{ $abbonamento->nome }} - € {{ number_format($abbonamento->prezzo, 2, ',', '.') }}</option>
+                                        <option value="{{ $abbonamento->id }}" data-prezzo="{{ $abbonamento->prezzo }}" data-durata="{{ $abbonamento->durata }}">{{ $abbonamento->nome }} - € {{ number_format($abbonamento->prezzo, 2, ',', '.') }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -317,15 +317,46 @@
                 abbonamentoIndex++;
             });
             
-            // Aggiorna il prezzo quando si seleziona un abbonamento
+            // Aggiorna il prezzo e calcola la data fine quando si seleziona un abbonamento
             abbonamentiContainer.addEventListener('change', function(e) {
                 if (e.target.tagName === 'SELECT' && e.target.name.includes('[id]')) {
                     const selectedOption = e.target.options[e.target.selectedIndex];
                     const prezzo = selectedOption.dataset.prezzo;
+                    const durata = selectedOption.dataset.durata;
                     const abbonamentoItem = e.target.closest('.abbonamento-item');
                     const prezzoInput = abbonamentoItem.querySelector('input[name$="[prezzo]"]');
+                    const dataInizioInput = abbonamentoItem.querySelector('input[name$="[data_inizio]"]');
+                    const dataFineInput = abbonamentoItem.querySelector('input[name$="[data_fine]"]');
+                    
                     if (prezzo && prezzoInput) {
                         prezzoInput.value = prezzo;
+                    }
+                    
+                    // Calcola automaticamente la data fine se c'è una durata e una data inizio
+                    if (durata && dataInizioInput && dataInizioInput.value && dataFineInput) {
+                        const dataInizio = new Date(dataInizioInput.value);
+                        const dataFine = new Date(dataInizio);
+                        dataFine.setDate(dataFine.getDate() + parseInt(durata));
+                        dataFineInput.value = dataFine.toISOString().split('T')[0];
+                    }
+                }
+                
+                // Calcola la data fine quando cambia la data inizio
+                if (e.target.type === 'date' && e.target.name.includes('[data_inizio]')) {
+                    const abbonamentoItem = e.target.closest('.abbonamento-item');
+                    const selectAbbonamento = abbonamentoItem.querySelector('select[name$="[id]"]');
+                    const dataFineInput = abbonamentoItem.querySelector('input[name$="[data_fine]"]');
+                    
+                    if (selectAbbonamento && selectAbbonamento.value && dataFineInput) {
+                        const selectedOption = selectAbbonamento.options[selectAbbonamento.selectedIndex];
+                        const durata = selectedOption.dataset.durata;
+                        
+                        if (durata && e.target.value) {
+                            const dataInizio = new Date(e.target.value);
+                            const dataFine = new Date(dataInizio);
+                            dataFine.setDate(dataFine.getDate() + parseInt(durata));
+                            dataFineInput.value = dataFine.toISOString().split('T')[0];
+                        }
                     }
                 }
             });
