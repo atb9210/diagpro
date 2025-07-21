@@ -15,6 +15,7 @@ RUN apk add --no-cache \
     mysql-client
 
 # Install PHP extensions
+RUN apk add --no-cache oniguruma-dev
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
 # Install Composer
