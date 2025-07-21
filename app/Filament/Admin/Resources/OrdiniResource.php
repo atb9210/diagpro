@@ -54,6 +54,46 @@ class OrdiniResource extends Resource
             $set('costo_prodotto', number_format($costoProdottiTotale, 2, '.', ''));
         };
 
+        $calcolaPrezzoVendita = function (Get $get, Set $set) {
+            \Log::info('=== INIZIO calcolaPrezzoVendita ===', ['timestamp' => now()]);
+            
+            $prodotti = $get('prodotti') ?? [];
+            \Log::info('Prodotti trovati:', ['count' => count($prodotti), 'prodotti' => $prodotti]);
+            
+            $prezzoVenditaTotale = 0;
+
+            foreach ($prodotti as $index => $prodotto) {
+                if (isset($prodotto['prezzo_unitario'], $prodotto['quantita'])) {
+                    $subtotale = (float) $prodotto['prezzo_unitario'] * (int) $prodotto['quantita'];
+                    $prezzoVenditaTotale += $subtotale;
+                    \Log::info("Prodotto {$index}:", [
+                        'prezzo_unitario' => $prodotto['prezzo_unitario'],
+                        'quantita' => $prodotto['quantita'],
+                        'subtotale' => $subtotale
+                    ]);
+                }
+            }
+
+            $abbonamenti = $get('abbonamenti') ?? [];
+            \Log::info('Abbonamenti trovati:', ['count' => count($abbonamenti), 'abbonamenti' => $abbonamenti]);
+            
+            foreach ($abbonamenti as $index => $abbonamento) {
+                if (isset($abbonamento['prezzo']) && is_numeric($abbonamento['prezzo'])) {
+                    $prezzoVenditaTotale += (float) $abbonamento['prezzo'];
+                    \Log::info("Abbonamento {$index}:", ['prezzo' => $abbonamento['prezzo']]);
+                }
+            }
+
+            $prezzoFormattato = number_format($prezzoVenditaTotale, 2, '.', '');
+            \Log::info('=== FINE calcolaPrezzoVendita ===', [
+                'prezzo_totale_calcolato' => $prezzoVenditaTotale,
+                'prezzo_formattato' => $prezzoFormattato,
+                'timestamp' => now()
+            ]);
+            
+            $set('prezzo_vendita', $prezzoFormattato);
+        };
+
         $updateMargine = function (Get $get, Set $set) {
             $prezzoVendita = (float) $get('prezzo_vendita');
             $costoMarketing = (float) $get('costo_marketing');
@@ -64,6 +104,11 @@ class OrdiniResource extends Resource
             $set('margine', number_format($margine, 2, '.', ''));
         };
 
+        $calcolaPrezzoVenditaEMargine = function (Get $get, Set $set) use ($calcolaPrezzoVendita, $updateMargine) {
+            $calcolaPrezzoVendita($get, $set);
+            $updateMargine($get, $set);
+        };
+
         return $form
             ->schema([
                 Forms\Components\Section::make('Informazioni Ordine')
@@ -72,7 +117,95 @@ class OrdiniResource extends Resource
                             ->relationship('cliente', 'nome')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\Section::make('Informazioni Generali')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('nome')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\Select::make('tipologia')
+                                            ->options([
+                                                'privato' => 'Privato',
+                                                'azienda' => 'Azienda',
+                                            ])
+                                            ->default('privato')
+                                            ->required()
+                                            ->live(),
+                                        Forms\Components\TextInput::make('ragione_sociale')
+                                             ->label('Ragione Sociale')
+                                             ->maxLength(255)
+                                             ->visible(fn (Get $get) => $get('tipologia') === 'azienda')
+                                             ->required(fn (Get $get) => $get('tipologia') === 'azienda'),
+                                     ])->columns(2),
+                                 Forms\Components\Section::make('Dati Fiscali')
+                                     ->schema([
+                                         Forms\Components\TextInput::make('codice_fiscale')
+                                             ->label('Codice Fiscale')
+                                             ->maxLength(16)
+                                             ->visible(fn (Get $get) => $get('tipologia') === 'privato'),
+                                         Forms\Components\TextInput::make('partita_iva')
+                                             ->label('Partita IVA')
+                                             ->maxLength(11)
+                                             ->visible(fn (Get $get) => $get('tipologia') === 'azienda'),
+                                     ])->columns(2),
+                                Forms\Components\Section::make('Contatti')
+                                    ->schema([
+                                        Forms\Components\Select::make('prefisso_telefonico')
+                                            ->label('Prefisso')
+                                            ->options([
+                                                '+39' => '🇮🇹 +39 (Italia)',
+                                                '+33' => '🇫🇷 +33 (Francia)',
+                                                '+49' => '🇩🇪 +49 (Germania)',
+                                                '+34' => '🇪🇸 +34 (Spagna)',
+                                                '+41' => '🇨🇭 +41 (Svizzera)',
+                                                '+1' => '🇺🇸 +1 (Stati Uniti)',
+                                                '+44' => '🇬🇧 +44 (Regno Unito)',
+                                            ])
+                                            ->default('+39')
+                                            ->searchable()
+                                            ->required(),
+                                        Forms\Components\TextInput::make('telefono')
+                                            ->label('Numero di Cellulare')
+                                            ->tel()
+                                            ->required()
+                                            ->minLength(8)
+                                            ->maxLength(15)
+                                            ->placeholder('Es. 3331234567'),
+                                        Forms\Components\TextInput::make('email')
+                                            ->email()
+                                            ->maxLength(255),
+                                    ])->columns(3),
+                                Forms\Components\Section::make('Indirizzo di Spedizione')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('indirizzo_spedizione')
+                                             ->label('Indirizzo'),
+                                         Forms\Components\TextInput::make('cap_spedizione')
+                                             ->label('CAP')
+                                             ->maxLength(10),
+                                         Forms\Components\TextInput::make('citta_spedizione')
+                                             ->label('Città')
+                                             ->maxLength(255),
+                                         Forms\Components\TextInput::make('provincia_spedizione')
+                                             ->label('Provincia')
+                                             ->maxLength(5)
+                                             ->placeholder('Es. MI, RM, NA'),
+                                         Forms\Components\Select::make('stato_spedizione')
+                                             ->label('Stato')
+                                             ->options([
+                                                 'IT' => '🇮🇹 Italia',
+                                                 'FR' => '🇫🇷 Francia',
+                                                 'DE' => '🇩🇪 Germania',
+                                                 'ES' => '🇪🇸 Spagna',
+                                                 'CH' => '🇨🇭 Svizzera',
+                                             ])
+                                             ->default('IT')
+                                             ->searchable(),
+                                    ])->columns(3),
+                            ])
+                            ->createOptionUsing(function (array $data) {
+                                return \App\Models\Cliente::create($data);
+                            }),
                         Forms\Components\Select::make('traffic_source_id')
                             ->relationship('trafficSource', 'nome')
                             ->searchable()
@@ -127,20 +260,86 @@ class OrdiniResource extends Resource
                 Forms\Components\Section::make('Prodotti e Abbonamenti')
                     ->schema([
                         Forms\Components\Repeater::make('prodotti')
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set) use ($calcolaPrezzoVenditaEMargine) {
+                                $calcolaPrezzoVenditaEMargine($get, $set);
+                            })
                             ->schema([
                                 Forms\Components\Select::make('prodotto_id')
                                     ->label('Prodotto')
-                                    ->options(\App\Models\Prodotto::all()->pluck('nome', 'id'))
+                                    ->options(\App\Models\Prodotto::where('stato', 'attivo')->pluck('nome', 'id'))
                                     ->searchable()
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) use ($calcolaCostoProdotti) {
-                                        $prodotto = \App\Models\Prodotto::find($state);
-                                        if ($prodotto) {
-                                            $set('prezzo_unitario', $prodotto->prezzo);
-                                            $set('costo', $prodotto->costo);
+                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) use ($calcolaCostoProdotti, $calcolaPrezzoVenditaEMargine) {
+                                        \Log::info('Prodotto selezionato:', ['prodotto_id' => $state, 'timestamp' => now()]);
+                                        
+                                        if ($state) {
+                                            $prodotto = \App\Models\Prodotto::find($state);
+                                            if ($prodotto) {
+                                                \Log::info('Prodotto trovato:', ['nome' => $prodotto->nome, 'prezzo' => $prodotto->prezzo, 'costo' => $prodotto->costo]);
+                                                
+                                                $set('prezzo_unitario', $prodotto->prezzo);
+                                                $set('costo', $prodotto->costo);
+                                                
+                                                // Debug: verifica stato prima del calcolo
+                                                $prezzoVenditaAttuale = $get('../../prezzo_vendita');
+                                                \Log::info('Prezzo vendita prima del calcolo:', ['prezzo' => $prezzoVenditaAttuale]);
+                                                
+                                                // Calcolo immediato
+                                                $calcolaCostoProdotti($get, $set);
+                                                $calcolaPrezzoVenditaEMargine($get, $set);
+                                                
+                                                // Delay per forzare l'aggiornamento UI
+                                                dispatch(function () use ($get, $set, $calcolaPrezzoVenditaEMargine) {
+                                                    \Log::info('Esecuzione delayed trigger');
+                                                    $calcolaPrezzoVenditaEMargine($get, $set);
+                                                })->afterResponse();
+                                            }
                                         }
-                                        $calcolaCostoProdotti($get, $set);
+                                    })
+                                    ->createOptionForm([
+                                        Forms\Components\Section::make('Informazioni Prodotto')
+                                            ->schema([
+                                                Forms\Components\TextInput::make('nome')
+                                                    ->required()
+                                                    ->maxLength(255),
+                                                Forms\Components\Textarea::make('descrizione')
+                                                    ->maxLength(65535)
+                                                    ->columnSpanFull(),
+                                                Forms\Components\TextInput::make('costo')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->prefix('€'),
+                                                Forms\Components\TextInput::make('prezzo')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->prefix('€'),
+                                                Forms\Components\Select::make('tipo')
+                                                    ->options([
+                                                        'fisico' => 'Prodotto Fisico',
+                                                        'servizio' => 'Servizio',
+                                                    ])
+                                                    ->default('fisico')
+                                                    ->required()
+                                                    ->live(),
+                                                Forms\Components\TextInput::make('quantita_disponibile')
+                                                    ->label('Quantità Disponibile')
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->visible(fn (Forms\Get $get) => $get('tipo') === 'fisico'),
+                                                Forms\Components\Select::make('stato')
+                                                    ->options([
+                                                        'attivo' => 'Attivo',
+                                                        'esaurito' => 'Esaurito',
+                                                        'discontinuo' => 'Discontinuo',
+                                                    ])
+                                                    ->default('attivo')
+                                                    ->required(),
+                                            ])->columns(2),
+                                    ])
+                                    ->createOptionUsing(function (array $data) {
+                                        return \App\Models\Prodotto::create($data);
                                     })
                                     ->columnSpan(2),
                                 Forms\Components\TextInput::make('quantita')
@@ -149,7 +348,10 @@ class OrdiniResource extends Resource
                                     ->default(1)
                                     ->minValue(1)
                                     ->live()
-                                    ->afterStateUpdated($calcolaCostoProdotti),
+                                    ->afterStateUpdated(function (Get $get, Set $set) use ($calcolaCostoProdotti, $calcolaPrezzoVenditaEMargine) {
+                                        $calcolaCostoProdotti($get, $set);
+                                        $calcolaPrezzoVenditaEMargine($get, $set);
+                                    }),
                                 Forms\Components\TextInput::make('costo')
                                     ->numeric()
                                     ->required()
@@ -161,60 +363,104 @@ class OrdiniResource extends Resource
                                     ->required()
                                     ->prefix('€')
                                     ->live()
-                                    ->afterStateUpdated($calcolaCostoProdotti),
+                                    ->afterStateUpdated(function (Get $get, Set $set) use ($calcolaCostoProdotti, $calcolaPrezzoVenditaEMargine) {
+                                        $calcolaCostoProdotti($get, $set);
+                                        $calcolaPrezzoVenditaEMargine($get, $set);
+                                    }),
                             ])
                             ->columns(6)
                             ->addActionLabel('Aggiungi Prodotto'),
                         Forms\Components\Repeater::make('abbonamenti')
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set) use ($calcolaPrezzoVenditaEMargine) {
+                                $calcolaPrezzoVenditaEMargine($get, $set);
+                            })
                             ->schema([
                                 Forms\Components\Select::make('abbonamento_id')
                                     ->label('Abbonamento')
                                     ->options(\App\Models\Abbonamento::all()->pluck('nome', 'id'))
                                     ->searchable()
                                     ->required()
-                                    ->live()
-                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) use ($calcolaCostoProdotti) {
-                                        $abbonamento = \App\Models\Abbonamento::find($state);
-                                        if ($abbonamento) {
-                                            $set('prezzo', $abbonamento->prezzo);
-                                            $set('costo', $abbonamento->costo);
-                                            $startDate = $get('data_inizio');
-                                            if ($startDate) {
-                                                $set('data_scadenza', date('Y-m-d', strtotime($startDate . ' + ' . $abbonamento->durata . ' days')));
+                                    ->reactive()
+                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) use ($calcolaCostoProdotti, $calcolaPrezzoVenditaEMargine) {
+                                        if ($state) {
+                                            $abbonamento = \App\Models\Abbonamento::find($state);
+                                            if ($abbonamento) {
+                                                $set('prezzo', $abbonamento->prezzo);
+                                                $set('costo', $abbonamento->costo);
+                                                // Forza il ricalcolo immediato
+                                                $calcolaCostoProdotti($get, $set);
+                                                $calcolaPrezzoVenditaEMargine($get, $set);
                                             }
                                         }
-                                        $calcolaCostoProdotti($get, $set);
+                                    })
+                                    ->createOptionForm([
+                                        Forms\Components\Section::make('Informazioni Abbonamento')
+                                            ->schema([
+                                                Forms\Components\TextInput::make('nome')
+                                                    ->required()
+                                                    ->maxLength(255),
+                                                Forms\Components\Textarea::make('descrizione')
+                                                    ->maxLength(65535)
+                                                    ->columnSpanFull(),
+                                                Forms\Components\TextInput::make('prezzo')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->prefix('€'),
+                                                Forms\Components\TextInput::make('costo')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->prefix('€'),
+                                                Forms\Components\TextInput::make('durata')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->suffix('giorni'),
+                                                Forms\Components\Select::make('frequenza_rinnovo')
+                                                    ->options([
+                                                        'mensile' => 'Mensile',
+                                                        'trimestrale' => 'Trimestrale',
+                                                        'semestrale' => 'Semestrale',
+                                                        'annuale' => 'Annuale',
+                                                    ])
+                                                    ->required(),
+                                                Forms\Components\Toggle::make('attivo')
+                                                    ->default(true)
+                                                    ->required(),
+                                            ])->columns(2),
+                                    ])
+                                    ->createOptionUsing(function (array $data) {
+                                        return \App\Models\Abbonamento::create($data);
                                     })
                                     ->columnSpan(2),
+                                Forms\Components\TextInput::make('quantita')
+                                    ->label('Quantità')
+                                    ->numeric()
+                                    ->required()
+                                    ->default(1)
+                                    ->minValue(1)
+                                    ->columnSpan(1),
                                 Forms\Components\DatePicker::make('data_inizio')
                                     ->required()
-                                    ->live()
-                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
-                                        $abbonamentoId = $get('abbonamento_id');
-                                        if ($abbonamentoId && $state) {
-                                            $abbonamento = \App\Models\Abbonamento::find($abbonamentoId);
-                                            if ($abbonamento) {
-                                                $set('data_scadenza', date('Y-m-d', strtotime($state . ' + ' . $abbonamento->durata . ' days')));
-                                            }
-                                        }
-                                    }),
-                                Forms\Components\TextInput::make('data_scadenza')
-                                    ->label('Data Scadenza')
-                                    ->disabled(),
+                                    ->columnSpan(1),
                                 Forms\Components\TextInput::make('costo')
                                     ->numeric()
                                     ->required()
                                     ->prefix('€')
                                     ->live()
-                                    ->afterStateUpdated($calcolaCostoProdotti),
+                                    ->afterStateUpdated($calcolaCostoProdotti)
+                                    ->columnSpan(1),
                                 Forms\Components\TextInput::make('prezzo')
                                     ->numeric()
                                     ->required()
                                     ->prefix('€')
                                     ->live()
-                                    ->afterStateUpdated($calcolaCostoProdotti),
+                                    ->afterStateUpdated(function (Get $get, Set $set) use ($calcolaCostoProdotti, $calcolaPrezzoVenditaEMargine) {
+                                        $calcolaCostoProdotti($get, $set);
+                                        $calcolaPrezzoVenditaEMargine($get, $set);
+                                    })
+                                    ->columnSpan(1),
                             ])
-                            ->columns(5)
+                            ->columns(6)
                             ->addActionLabel('Aggiungi Abbonamento'),
 
                         Forms\Components\Section::make()
@@ -254,8 +500,23 @@ class OrdiniResource extends Resource
                             ->required()
                             ->numeric()
                             ->prefix('€')
-                            ->live(onBlur: true)
-                            ->afterStateUpdated($updateMargine),
+                            ->live()
+                            ->reactive()
+                            ->extraAttributes([
+                                'wire:model.live' => 'data.prezzo_vendita',
+                                'x-data' => '{}',
+                                'x-init' => 'console.log("Prezzo vendita field initialized")'
+                            ])
+                            ->afterStateUpdated(function (Get $get, Set $set, ?string $state) use ($updateMargine) {
+                                \Log::info('Prezzo vendita aggiornato manualmente:', ['nuovo_prezzo' => $state, 'timestamp' => now()]);
+                                $updateMargine($get, $set, $state);
+                                
+                                // Delay per assicurare l'aggiornamento UI
+                                dispatch(function () use ($get, $set, $updateMargine, $state) {
+                                    \Log::info('Delayed update margine per prezzo vendita');
+                                    $updateMargine($get, $set, $state);
+                                })->afterResponse();
+                            }),
                         Forms\Components\TextInput::make('costo_marketing')
                             ->numeric()
                             ->prefix('€')
@@ -296,6 +557,7 @@ class OrdiniResource extends Resource
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
             ->deferLoading()
+            ->defaultSort('data', 'desc')
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Nuovo Ordine'),
@@ -394,7 +656,7 @@ class OrdiniResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->width('90px')
                     ->alignment('right'),
                 Tables\Columns\TextColumn::make('costo_prodotto')
@@ -402,7 +664,7 @@ class OrdiniResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->width('90px')
                     ->alignment('right'),
                 Tables\Columns\TextColumn::make('costo_spedizione')
@@ -410,7 +672,7 @@ class OrdiniResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->width('90px')
                     ->alignment('right'),
                 Tables\Columns\TextColumn::make('altri_costi')
@@ -418,7 +680,7 @@ class OrdiniResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->money('EUR')
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->width('80px')
                     ->alignment('right'),
                 Tables\Columns\TextColumn::make('costi_totali')
@@ -443,6 +705,20 @@ class OrdiniResource extends Resource
                     ->toggleable()
                     ->width('90px')
                     ->alignment('right'),
+                Tables\Columns\IconColumn::make('costi_dettaglio')
+                    ->label('Info Costi')
+                    ->icon(fn () => 'heroicon-o-information-circle')
+                    ->color('primary')
+                    ->tooltip(function (Ordini $record): string {
+                        $tooltip = "Dettaglio Costi:\n";
+                        $tooltip .= "• Marketing: €" . number_format($record->costo_marketing, 2) . "\n";
+                        $tooltip .= "• Prodotto: €" . number_format($record->costo_prodotto, 2) . "\n";
+                        $tooltip .= "• Spedizione: €" . number_format($record->costo_spedizione, 2) . "\n";
+                        $tooltip .= "• Altri: €" . number_format($record->altri_costi, 2);
+                        return $tooltip;
+                    })
+                    ->alignCenter()
+                    ->width('80px'),
                 Tables\Columns\IconColumn::make('vat')
                     ->boolean()
                     ->toggleable()

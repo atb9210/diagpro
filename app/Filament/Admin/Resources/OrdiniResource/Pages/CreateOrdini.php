@@ -39,10 +39,24 @@ class CreateOrdini extends CreateRecord
         $abbonamentiToSync = [];
         foreach ($abbonamentiData as $abbonamento) {
             if (empty($abbonamento['abbonamento_id'])) continue;
+            
+            // Calcola la data di scadenza basata sulla durata dell'abbonamento moltiplicata per la quantità
+            $abbonamentoModel = \App\Models\Abbonamento::find($abbonamento['abbonamento_id']);
+            $dataScadenza = null;
+            if ($abbonamentoModel && isset($abbonamento['data_inizio'])) {
+                $dataInizio = new \DateTime($abbonamento['data_inizio']);
+                $quantita = isset($abbonamento['quantita']) ? (int)$abbonamento['quantita'] : 1;
+                $durataGiorni = $abbonamentoModel->durata * $quantita;
+                $dataScadenza = $dataInizio->modify('+' . $durataGiorni . ' days')->format('Y-m-d');
+            }
+            
             $abbonamentiToSync[$abbonamento['abbonamento_id']] = [
+                'quantita' => isset($abbonamento['quantita']) ? $abbonamento['quantita'] : 1,
                 'prezzo' => $abbonamento['prezzo'],
                 'data_inizio' => $abbonamento['data_inizio'],
+                'data_fine' => $dataScadenza,
                 'costo' => $abbonamento['costo'],
+                'attivo' => true,
             ];
         }
         if (!empty($abbonamentiToSync)) {

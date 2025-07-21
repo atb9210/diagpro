@@ -10,6 +10,8 @@ class Abbonamento extends Model
 {
     use HasFactory;
     
+    protected $table = 'abbonamentos';
+    
     protected $fillable = [
         'nome',
         'descrizione',

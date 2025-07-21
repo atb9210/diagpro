@@ -12,6 +12,8 @@ class Ordini extends Model
 {
     use HasFactory;
     
+    protected $table = 'ordinis';
+    
     protected $fillable = [
         'data',
         'cliente_id',
@@ -73,7 +75,7 @@ class Ordini extends Model
     public function abbonamenti(): BelongsToMany
     {
         return $this->belongsToMany(Abbonamento::class, 'ordini_abbonamento', 'ordini_id', 'abbonamento_id')
-                    ->withPivot('data_inizio', 'data_fine', 'prezzo', 'attivo', 'costo')
+                    ->withPivot('quantita', 'data_inizio', 'data_fine', 'prezzo', 'attivo', 'costo')
                     ->withCasts([
                         'data_inizio' => 'date',
                         'data_fine' => 'date',
