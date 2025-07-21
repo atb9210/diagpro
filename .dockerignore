@@ -1,0 +1,104 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Laravel
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.local
+.env.production
+
+# Composer
+/vendor/
+composer.phar
+
+# PHPUnit
+.phpunit.result.cache
+/coverage/
+
+# Deployment
+.vercel/
+
+# Docker
+docker-compose.override.yml
+*.dockerfile
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache
+.cache/
+
+# Build artifacts
+build/
+dist/
