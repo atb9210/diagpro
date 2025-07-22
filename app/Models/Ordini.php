@@ -18,6 +18,7 @@ class Ordini extends Model
         'data',
         'cliente_id',
         'traffic_source_id',
+        'campagna_id',
         'tipo_vendita',
         'link_ordine',
         'prezzo_vendita',
@@ -57,6 +58,14 @@ class Ordini extends Model
     public function trafficSource(): BelongsTo
     {
         return $this->belongsTo(TrafficSource::class);
+    }
+    
+    /**
+     * Get the campagna associated with the order.
+     */
+    public function campagna(): BelongsTo
+    {
+        return $this->belongsTo(Campagna::class);
     }
     
     /**

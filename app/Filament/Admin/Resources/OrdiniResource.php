@@ -210,6 +210,12 @@ class OrdiniResource extends Resource
                             ->relationship('trafficSource', 'nome')
                             ->searchable()
                             ->preload(),
+                        Forms\Components\Select::make('campagna_id')
+                            ->label('Campagna Pubblicitaria')
+                            ->relationship('campagna', 'nome_campagna')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleziona una campagna (opzionale)'),
                         Forms\Components\DatePicker::make('data')
                             ->required()
                             ->default(now()),
@@ -583,6 +589,16 @@ class OrdiniResource extends Resource
                     ->defaultImageUrl(url('/images/default-icon.svg'))
                     ->toggleable()
                     ->size(32),
+                Tables\Columns\TextColumn::make('campagna.nome_campagna')
+                    ->label('Campagna')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limit(20)
+                    ->placeholder('-')
+                    ->tooltip(function (\App\Models\Ordini $record): ?string {
+                        return $record->campagna?->nome_campagna;
+                    }),
                 Tables\Columns\BadgeColumn::make('tipo_vendita')
                     ->colors([
                         'info' => 'appuntamento',
