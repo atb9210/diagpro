@@ -19,6 +19,7 @@ class Ordini extends Model
         'cliente_id',
         'traffic_source_id',
         'campagna_id',
+        'shop_id',
         'tipo_vendita',
         'link_ordine',
         'prezzo_vendita',
@@ -66,6 +67,14 @@ class Ordini extends Model
     public function campagna(): BelongsTo
     {
         return $this->belongsTo(Campagna::class);
+    }
+    
+    /**
+     * Get the shop associated with the order.
+     */
+    public function shop(): BelongsTo
+    {
+        return $this->belongsTo(Shop::class);
     }
     
     /**

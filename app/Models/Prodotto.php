@@ -71,6 +71,24 @@ class Prodotto extends Model
     }
     
     /**
+     * Get the shops associated with the product.
+     */
+    public function shops(): BelongsToMany
+    {
+        return $this->belongsToMany(Shop::class, 'prodotto_shop')
+                    ->withPivot('prezzo_personalizzato', 'attivo', 'ordine', 'configurazione')
+                    ->withTimestamps();
+    }
+    
+    /**
+     * Get only active shops for this product.
+     */
+    public function shopsAttivi(): BelongsToMany
+    {
+        return $this->shops()->wherePivot('attivo', true);
+    }
+    
+    /**
      * Scope a query to only include active products.
      */
     public function scopeAttivi($query)

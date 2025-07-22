@@ -53,6 +53,14 @@ class Cliente extends Model
     }
     
     /**
+     * Get the order requests associated with the client.
+     */
+    public function richiesteOrdine(): HasMany
+    {
+        return $this->hasMany(RichiestaOrdine::class);
+    }
+    
+    /**
      * Calculate total amount spent by the client.
      */
     public function getTotaleSpesoAttribute(): float

@@ -7,6 +7,7 @@ use App\Filament\Admin\Resources\ProdottoResource\RelationManagers;
 use App\Models\Prodotto;
 use App\Models\Categoria;
 use App\Models\Fornitore;
+use App\Models\Shop;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -66,6 +67,10 @@ class ProdottoResource extends Resource
                             ])
                             ->default('attivo')
                             ->required(),
+                        Forms\Components\Placeholder::make('shops_info')
+                            ->label('Mini Shop')
+                            ->content('I prodotti vengono associati ai Mini Shop dalla pagina di gestione del singolo Shop.')
+                            ->helperText('Vai alla sezione "Mini Shop" per associare questo prodotto ai tuoi shop.'),
                     ])->columns(2),
                 
                 Forms\Components\Section::make('Dettagli Aggiuntivi')
@@ -182,6 +187,18 @@ class ProdottoResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nome')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('shops')
+                    ->label('Mini Shop')
+                    ->badge()
+                    ->color('info')
+                    ->formatStateUsing(function ($record) {
+                        $shops = $record->shops()->wherePivot('attivo', true)->get();
+                        return $shops->count() > 0 ? $shops->pluck('nome')->join(', ') : 'Nessuno';
+                    })
+                    ->tooltip(function ($record) {
+                        $shops = $record->shops()->wherePivot('attivo', true)->get();
+                        return $shops->count() > 1 ? 'Presente in ' . $shops->count() . ' shop' : null;
+                    }),
                 Tables\Columns\TextColumn::make('tipo')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
