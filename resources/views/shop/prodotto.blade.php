@@ -9,7 +9,7 @@
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
             <li>
-                <a href="{{ route('shop.index', $shop->slug) }}" class="hover:text-primary transition-colors">
+                <a href="{{ route('shop.index', $shop->slug) }}" class="hover:shop-primary-text transition-colors">
                     {{ $shop->nome }}
                 </a>
             </li>
@@ -74,7 +74,7 @@
                         {{ ucfirst($prodotto->tipo) }}
                     </span>
                 @endif
-                <div class="text-3xl font-bold text-primary mb-4">
+                <div class="text-3xl font-bold shop-primary-text mb-4">
                     €{{ number_format($prodotto->prezzo, 2, ',', '.') }}
                 </div>
             </div>
@@ -169,7 +169,7 @@
                     </div>
 
                     <button onclick="aggiungiAlCarrelloConQuantita()" 
-                            class="w-full bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center space-x-2">
+                            class="w-full btn-shop-primary py-3 px-6 rounded-lg font-semibold flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0V9a2 2 0 10-4 0v4.01"></path>
                         </svg>

@@ -82,9 +82,9 @@ class ShopController extends Controller
             ], 422);
         }
         
-        $prodotto = Prodotto::where('id', $request->prodotto_id)
-            ->where('shop_id', $shop->id)
-            ->where('stato', 'attivo')
+        $prodotto = $shop->prodotti()
+            ->where('prodottos.id', $request->prodotto_id)
+            ->where('prodottos.stato', 'attivo')
             ->firstOrFail();
             
         // Verifica disponibilità

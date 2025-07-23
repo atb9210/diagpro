@@ -155,7 +155,7 @@
         <!-- Azioni -->
         <div class="text-center mt-8">
             <a href="{{ route('shop.index', $shop->slug) }}" 
-               class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white shop-bg-primary hover:opacity-90 transition-opacity">
+               class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md btn-shop-primary hover:opacity-90 transition-opacity">
                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>

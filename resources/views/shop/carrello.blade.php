@@ -71,9 +71,9 @@
                             
                             <!-- Totale -->
                             <div class="col-span-2 text-center">
-                                <span class="font-bold text-primary">
-                                    €{{ number_format($item['prezzo'] * $item['quantita'], 2, ',', '.') }}
-                                </span>
+                                <span class="font-bold shop-primary-text">
+                                €{{ number_format($item['prezzo'] * $item['quantita'], 2, ',', '.') }}
+                            </span>
                             </div>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
             <div class="bg-gray-50 px-6 py-4 border-t">
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-semibold text-gray-900">Totale carrello:</span>
-                    <span id="totale-carrello" class="text-2xl font-bold text-primary">
+                    <span id="totale-carrello" class="text-2xl font-bold shop-primary-text">
                         €{{ number_format($totale, 2, ',', '.') }}
                     </span>
                 </div>
@@ -99,7 +99,7 @@
             </a>
             
             <a href="{{ route('shop.checkout', $shop->slug) }}" 
-               class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-center font-semibold">
+               class="px-8 py-3 btn-shop-primary rounded-lg text-center font-semibold">
                 Procedi al checkout →
             </a>
         </div>
@@ -113,7 +113,7 @@
             <p class="text-gray-500 mb-6">Aggiungi alcuni prodotti per iniziare!</p>
             
             <a href="{{ route('shop.index', $shop->slug) }}" 
-               class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold">
+               class="inline-flex items-center px-6 py-3 btn-shop-primary rounded-lg font-semibold">
                 Inizia a fare acquisti
             </a>
         </div>

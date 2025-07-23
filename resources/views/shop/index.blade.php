@@ -20,12 +20,12 @@
     <div class="mb-8">
         <div class="flex flex-wrap gap-4 justify-center">
             <a href="{{ route('shop.index', $shop->slug) }}" 
-               class="px-4 py-2 rounded-lg {{ !request('tipo') ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition-colors">
+               class="px-4 py-2 rounded-lg {{ !request('tipo') ? 'btn-shop-primary' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition-colors">
                 Tutti i prodotti
             </a>
             @foreach($tipiProdotti as $tipo)
                 <a href="{{ route('shop.index', $shop->slug) }}?tipo={{ $tipo }}" 
-                   class="px-4 py-2 rounded-lg {{ request('tipo') === $tipo ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition-colors">
+                   class="px-4 py-2 rounded-lg {{ request('tipo') === $tipo ? 'btn-shop-primary' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition-colors">
                     {{ ucfirst($tipo) }}
                 </a>
             @endforeach
@@ -67,7 +67,7 @@
                     <div class="p-4">
                         <h3 class="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
                             <a href="{{ route('shop.prodotto', ['slug' => $shop->slug, 'prodotto' => $prodotto->id]) }}" 
-                               class="hover:text-primary transition-colors">
+                               class="hover:shop-primary-text transition-colors">
                                 {{ $prodotto->nome }}
                             </a>
                         </h3>
@@ -79,13 +79,13 @@
                         @endif
 
                         <div class="flex items-center justify-between">
-                            <div class="text-xl font-bold text-primary">
+                            <div class="text-xl font-bold shop-primary-text">
                                 €{{ number_format($prodotto->prezzo, 2, ',', '.') }}
                             </div>
                             
                             @if($prodotto->quantita_disponibile > 0)
                                 <button onclick="aggiungiAlCarrello({{ $prodotto->id }}, '{{ $prodotto->nome }}', {{ $prodotto->prezzo }})" 
-                                        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                                        class="btn-shop-primary px-4 py-2 rounded-lg text-sm font-semibold">
                                     Aggiungi
                                 </button>
                             @else

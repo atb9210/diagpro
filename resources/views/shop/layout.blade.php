@@ -157,7 +157,7 @@
                 
                 <div class="space-y-2">
                     <button id="continue-shopping" class="w-full py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-                        Continua con il negozio
+                        Continua lo shopping
                     </button>
                     <a href="{{ route('shop.carrello', $shop->slug) }}" class="block w-full py-2 px-4 btn-shop-primary rounded-md text-center font-medium transition-colors">
                         Vai al carrello
@@ -190,6 +190,8 @@
             </div>
         </div>
     </div>
+
+
     
     <!-- Filament Scripts -->
     @filamentScripts
@@ -227,6 +229,8 @@
             document.getElementById('cart-overlay').classList.add('show');
             loadCartItems();
         });
+        
+
         
         // Add to cart function
         function addToCart(prodottoId, quantita = 1) {
@@ -299,7 +303,19 @@
                         const nome = itemElement.querySelector('.font-semibold.text-gray-900').textContent.trim();
                         const prezzo = itemElement.querySelector('.col-span-2.text-center .font-semibold').textContent.trim();
                         const quantita = itemElement.querySelector('.w-8.text-center.font-semibold').textContent.trim();
-                        const totaleItem = itemElement.querySelector('.font-bold.text-primary').textContent.trim();
+                        const totaleItem = itemElement.querySelector('.font-bold.shop-primary-text').textContent.trim();
+                        
+                        // Estrai l'ID del prodotto dal bottone di aggiornamento quantità
+                        const updateButton = itemElement.querySelector('button[onclick*="aggiornaQuantita"]');
+                        let prodottoId = null;
+                        if (updateButton) {
+                            const onclickAttr = updateButton.getAttribute('onclick');
+                            // Cerca sia aggiornaQuantita che aggiornaQuantitaCarrello
+                            const match = onclickAttr.match(/aggiornaQuantita(?:Carrello)?\((\d+),/);
+                            if (match) {
+                                prodottoId = match[1];
+                            }
+                        }
                         
                         let immagine = '';
                         const imgElement = itemElement.querySelector('img');
@@ -307,7 +323,7 @@
                             immagine = imgElement.getAttribute('src');
                         }
                         
-                        items.push({ nome, prezzo, quantita, totaleItem, immagine });
+                        items.push({ nome, prezzo, quantita: parseInt(quantita), totaleItem, immagine, prodottoId });
                     });
                     
                     // Estrai il totale del carrello
@@ -316,7 +332,7 @@
                     
                     // Renderizza gli elementi del carrello nella sidebar
                     cartItemsContainer.innerHTML = items.map(item => `
-                        <div class="py-3 border-b">
+                        <div class="py-3 border-b" data-product-id="${item.prodottoId}">
                             <div class="flex items-center space-x-3">
                                 ${item.immagine ? `<img src="${item.immagine}" alt="${item.nome}" class="w-12 h-12 object-cover rounded">` : 
                                 `<div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
@@ -326,9 +342,57 @@
                                 </div>`}
                                 <div class="flex-1">
                                     <h4 class="font-medium text-sm">${item.nome}</h4>
-                                    <div class="flex justify-between text-sm text-gray-500 mt-1">
-                                        <span>${item.prezzo} × ${item.quantita}</span>
-                                        <span class="font-semibold shop-primary-text">${item.totaleItem}</span>
+                                    <div class="text-sm text-gray-500 mt-1">
+                                        <span data-prezzo>${item.prezzo}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <div class="flex items-center space-x-2">
+                                            <button onclick="aggiornaQuantitaCarrello(${item.prodottoId}, ${item.quantita - 1})" 
+                                                    class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors btn-minus"
+                                                    ${item.quantita <= 1 ? 'disabled' : ''}>
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                </svg>
+                                            </button>
+                                            <span class="text-xs font-medium text-gray-900 w-6 text-center quantita-display">${item.quantita}</span>
+                                            <button onclick="aggiornaQuantitaCarrello(${item.prodottoId}, ${item.quantita + 1})" 
+                                                    class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors btn-plus">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold shop-primary-text text-sm totale-item">${item.totaleItem}</span>
+                                            <button onclick="rimuoviDalCarrello(${item.prodottoId})" 
+                                                    class="w-5 h-5 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center text-red-600 hover:text-red-800 transition-colors btn-remove"
+                                                    title="Rimuovi dal carrello">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Messaggio di conferma rimozione inline -->
+                            <div id="confirm-remove-${item.prodottoId}" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 mt-2 mx-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium text-red-800">Rimuovere dal carrello?</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="annullaRimozione(${item.prodottoId})" 
+                                                class="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
+                                            Annulla
+                                        </button>
+                                        <button onclick="confermaRimozione(${item.prodottoId})" 
+                                                class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                                            Rimuovi
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -358,6 +422,195 @@
                     console.error('Error loading cart count:', error);
                 });
         }
+        
+        // Aggiorna quantità nel carrello
+        function aggiornaQuantitaCarrello(prodottoId, nuovaQuantita) {
+            if (nuovaQuantita < 1) return;
+            
+            // Trova l'elemento specifico nel DOM
+            const cartItem = document.querySelector(`[data-product-id="${prodottoId}"]`);
+            if (!cartItem) return;
+            
+            // Disabilita temporaneamente i controlli per evitare click multipli
+            const buttons = cartItem.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            fetch(`{{ route('shop.carrello.aggiorna', $shop->slug) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    prodotto_id: prodottoId,
+                    quantita: nuovaQuantita
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Aggiorna solo l'elemento specifico
+                    aggiornaElementoCarrello(prodottoId, nuovaQuantita, data);
+                    updateCartCount(data.carrello_count);
+                    
+                    // Aggiorna il totale del carrello
+                    const cartTotalElement = document.getElementById('cart-total');
+                    if (cartTotalElement && data.totale) {
+                        cartTotalElement.textContent = '€ ' + data.totale;
+                    }
+                } else {
+                    alert(data.message || 'Errore durante l\'aggiornamento del carrello');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Errore durante l\'aggiornamento del carrello');
+            })
+            .finally(() => {
+                // Riabilita i controlli
+                buttons.forEach(btn => btn.disabled = false);
+            });
+        }
+        
+        // Aggiorna elemento specifico del carrello
+         function aggiornaElementoCarrello(prodottoId, nuovaQuantita, data) {
+             const cartItem = document.querySelector(`[data-product-id="${prodottoId}"]`);
+             if (!cartItem) return;
+             
+             const quantitaDisplay = cartItem.querySelector('.quantita-display');
+             const btnMinus = cartItem.querySelector('.btn-minus');
+             const btnPlus = cartItem.querySelector('.btn-plus');
+             const totaleItem = cartItem.querySelector('.totale-item');
+             
+             // Aggiorna la quantità visualizzata
+             if (quantitaDisplay) {
+                 quantitaDisplay.textContent = nuovaQuantita;
+             }
+             
+             // Aggiorna lo stato del bottone minus
+             if (btnMinus) {
+                 btnMinus.disabled = nuovaQuantita <= 1;
+                 btnMinus.setAttribute('onclick', `aggiornaQuantitaCarrello(${prodottoId}, ${nuovaQuantita - 1})`);
+             }
+             
+             // Aggiorna il bottone plus
+             if (btnPlus) {
+                 btnPlus.setAttribute('onclick', `aggiornaQuantitaCarrello(${prodottoId}, ${nuovaQuantita + 1})`);
+             }
+             
+             // Calcola e aggiorna il totale dell'item
+             if (totaleItem) {
+                 const prezzoElement = cartItem.querySelector('[data-prezzo]');
+                 if (prezzoElement) {
+                     const prezzoText = prezzoElement.textContent.trim();
+                     const prezzo = parseFloat(prezzoText.replace('€', '').replace(',', '.').trim());
+                     const nuovoTotale = (prezzo * nuovaQuantita).toFixed(2).replace('.', ',');
+                     totaleItem.textContent = `€ ${nuovoTotale}`;
+                 }
+             }
+         }
+         
+         // Rimuovi dal carrello - mostra messaggio di conferma inline
+          function rimuoviDalCarrello(prodottoId) {
+              const confirmMessage = document.getElementById(`confirm-remove-${prodottoId}`);
+              if (confirmMessage) {
+                  confirmMessage.classList.remove('hidden');
+              }
+          }
+          
+          // Annulla rimozione
+          function annullaRimozione(prodottoId) {
+              const confirmMessage = document.getElementById(`confirm-remove-${prodottoId}`);
+              if (confirmMessage) {
+                  confirmMessage.classList.add('hidden');
+              }
+          }
+          
+          // Conferma rimozione dal carrello
+          function confermaRimozione(prodottoId) {
+              // Nascondi il messaggio di conferma
+              const confirmMessage = document.getElementById(`confirm-remove-${prodottoId}`);
+              if (confirmMessage) {
+                  confirmMessage.classList.add('hidden');
+              }
+              
+              // Procedi con la rimozione
+              confirmRemoveFromCart(prodottoId);
+          }
+          
+          // Logica di rimozione effettiva
+          function confirmRemoveFromCart(prodottoId) {
+              const cartItem = document.querySelector(`[data-product-id="${prodottoId}"]`);
+              if (!cartItem) return;
+              
+              // Aggiungi animazione di fade out
+              cartItem.style.transition = 'opacity 0.3s ease-out';
+              cartItem.style.opacity = '0.5';
+              
+              // Usa la rotta di aggiornamento con quantità 0 per rimuovere
+              fetch(`{{ route('shop.carrello.aggiorna', $shop->slug) }}`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                  },
+                  body: JSON.stringify({
+                      prodotto_id: prodottoId,
+                      quantita: 0
+                  })
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      // Rimuovi l'elemento con animazione
+                      cartItem.style.height = cartItem.offsetHeight + 'px';
+                      cartItem.style.transition = 'height 0.3s ease-out, opacity 0.3s ease-out';
+                      cartItem.style.height = '0';
+                      cartItem.style.opacity = '0';
+                      cartItem.style.paddingTop = '0';
+                      cartItem.style.paddingBottom = '0';
+                      cartItem.style.marginTop = '0';
+                      cartItem.style.marginBottom = '0';
+                      
+                      setTimeout(() => {
+                          cartItem.remove();
+                          
+                          // Controlla se il carrello è vuoto
+                          const cartItemsContainer = document.getElementById('cart-items');
+                          if (cartItemsContainer && cartItemsContainer.children.length === 0) {
+                              cartItemsContainer.innerHTML = `
+                                  <div class="text-center py-6">
+                                      <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"></path>
+                                      </svg>
+                                      <p class="text-gray-500">Il tuo carrello è vuoto</p>
+                                  </div>
+                              `;
+                          }
+                      }, 300);
+                      
+                      updateCartCount(data.carrello_count);
+                      
+                      // Aggiorna il totale del carrello
+                      const cartTotalElement = document.getElementById('cart-total');
+                      if (cartTotalElement && data.totale) {
+                          cartTotalElement.textContent = '€ ' + data.totale;
+                      } else if (cartTotalElement && data.carrello_count === 0) {
+                          cartTotalElement.textContent = '€ 0,00';
+                      }
+                  } else {
+                      // Ripristina l'opacità in caso di errore
+                      cartItem.style.opacity = '1';
+                      alert(data.message || 'Errore durante la rimozione dal carrello');
+                  }
+              })
+              .catch(error => {
+                  // Ripristina l'opacità in caso di errore
+                  cartItem.style.opacity = '1';
+                  console.error('Error:', error);
+                  alert('Errore durante la rimozione dal carrello');
+              });
+          }
     </script>
     
     @stack('scripts')
