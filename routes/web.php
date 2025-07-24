@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrdiniController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\OpenAIExampleController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,4 +24,12 @@ Route::prefix('shop')->name('shop.')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     // Route::resource('ordini', OrdiniController::class); // Commentato per usare Filament
+});
+
+// Rotte di esempio per OpenAI (protette da autenticazione)
+Route::middleware(['auth'])->prefix('api/openai')->name('openai.')->group(function () {
+    Route::post('/generate', [OpenAIExampleController::class, 'generateText'])->name('generate');
+    Route::post('/chat', [OpenAIExampleController::class, 'chat'])->name('chat');
+    Route::get('/models', [OpenAIExampleController::class, 'getModels'])->name('models');
+    Route::get('/test', [OpenAIExampleController::class, 'testConnection'])->name('test');
 });
