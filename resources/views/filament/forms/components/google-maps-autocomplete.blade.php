@@ -4,7 +4,7 @@
 >
     <div x-data="{
         state: $wire.$entangle('{{ $getStatePath() }}'),
-        apiKey: '{{ \App\Models\Impostazione::get('google_maps_api_key') }}',
+        apiKey: '{{ \App\Models\Integrazione::get('google_maps_api_key') }}',
         fieldPrefix: '{{ $getFieldPrefix() }}',
         autocomplete: null,
         
@@ -217,7 +217,7 @@
             @endif
         />
         
-        @if (!\App\Models\Impostazione::get('google_maps_api_key'))
+        @if (!\App\Models\Integrazione::get('google_maps_api_key'))
             <p class="text-sm text-red-600 mt-1">
                 Chiave API Google Maps non configurata nelle impostazioni.
             </p>

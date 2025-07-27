@@ -2,9 +2,9 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\ImpostazioneResource\Pages;
-use App\Filament\Admin\Resources\ImpostazioneResource\RelationManagers;
-use App\Models\Impostazione;
+use App\Filament\Admin\Resources\IntegrazioneResource\Pages;
+use App\Filament\Admin\Resources\IntegrazioneResource\RelationManagers;
+use App\Models\Integrazione;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,17 +13,17 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ImpostazioneResource extends Resource
+class IntegrazioneResource extends Resource
 {
-    protected static ?string $model = Impostazione::class;
+    protected static ?string $model = Integrazione::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     
-    protected static ?string $navigationLabel = 'Impostazioni';
+    protected static ?string $navigationLabel = 'Integrazioni';
     
-    protected static ?string $modelLabel = 'Impostazione';
+    protected static ?string $modelLabel = 'Integrazione';
     
-    protected static ?string $pluralModelLabel = 'Impostazioni';
+    protected static ?string $pluralModelLabel = 'Integrazioni';
     
     protected static ?int $navigationSort = 99;
 
@@ -31,13 +31,13 @@ class ImpostazioneResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Dettagli Impostazione')
+                Forms\Components\Section::make('Dettagli Integrazione')
                     ->schema([
                         Forms\Components\TextInput::make('chiave')
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->helperText('Identificativo univoco dell\'impostazione'),
+                            ->helperText('Identificativo univoco dell\'integrazione'),
                         Forms\Components\Select::make('tipo')
                             ->options([
                                 'string' => 'Testo',
@@ -50,7 +50,7 @@ class ImpostazioneResource extends Resource
                             ->afterStateUpdated(fn (Forms\Set $set) => $set('valore', '')),
                         Forms\Components\TextInput::make('descrizione')
                             ->maxLength(255)
-                            ->helperText('Descrizione dell\'impostazione'),
+                            ->helperText('Descrizione dell\'integrazione'),
                     ])->columns(2),
                     
                 Forms\Components\Section::make('Valore')
@@ -136,9 +136,9 @@ class ImpostazioneResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListImpostaziones::route('/'),
-            'create' => Pages\CreateImpostazione::route('/create'),
-            'edit' => Pages\EditImpostazione::route('/{record}/edit'),
+            'index' => Pages\ListIntegrazioni::route('/'),
+            'create' => Pages\CreateIntegrazione::route('/create'),
+            'edit' => Pages\EditIntegrazione::route('/{record}/edit'),
         ];
     }
 }

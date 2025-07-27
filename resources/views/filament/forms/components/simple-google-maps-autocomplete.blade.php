@@ -18,7 +18,7 @@
         />
     </div>
     
-    @if (!\App\Models\Impostazione::get('google_maps_api_key'))
+    @if (!\App\Models\Integrazione::get('google_maps_api_key'))
         <p class="text-sm text-red-600 mt-1">
             Chiave API Google Maps non configurata nelle impostazioni.
         </p>
@@ -27,7 +27,7 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const apiKey = '{{ \App\Models\Impostazione::get('google_maps_api_key') }}';
+            const apiKey = '{{ \App\Models\Integrazione::get('google_maps_api_key') }}';
             
             if (!apiKey) {
                 console.error('Google Maps API key not found');

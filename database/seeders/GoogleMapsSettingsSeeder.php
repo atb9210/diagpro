@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 
 class GoogleMapsSettingsSeeder extends Seeder
 {
@@ -12,7 +12,7 @@ class GoogleMapsSettingsSeeder extends Seeder
      */
     public function run(): void
     {
-        Impostazione::set(
+        Integrazione::set(
             'google_maps_api_key',
             'AIzaSyCq4OBTYMQTc4EriJquqsltsLqFaP9dXBY',
             'string',

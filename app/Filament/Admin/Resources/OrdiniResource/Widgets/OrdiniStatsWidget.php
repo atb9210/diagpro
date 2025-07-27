@@ -3,7 +3,7 @@
 namespace App\Filament\Admin\Resources\OrdiniResource\Widgets;
 
 use App\Models\Ordini;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Carbon\Carbon;
@@ -34,7 +34,7 @@ class OrdiniStatsWidget extends BaseWidget
         $marginePercentuale = $totaleVenduto > 0 ? ($totaleProfitto / $totaleVenduto) * 100 : 0;
         
         // Obiettivo configurabile dalle impostazioni
-        $obiettivo = Impostazione::get('obiettivo_profitto_mensile', 2000);
+        $obiettivo = Integrazione::get('obiettivo_profitto_mensile', 2000);
         
         // Percentuale obiettivo
         $percentualeObiettivo = $obiettivo > 0 ? ($totaleProfitto / $obiettivo) * 100 : 0;

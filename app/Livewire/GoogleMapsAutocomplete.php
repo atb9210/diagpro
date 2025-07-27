@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 
 class GoogleMapsAutocomplete extends Component
 {
@@ -85,7 +85,7 @@ class GoogleMapsAutocomplete extends Component
     
     public function render()
     {
-        $apiKey = Impostazione::get('google_maps_api_key');
+        $apiKey = Integrazione::get('google_maps_api_key');
         
         return view('livewire.google-maps-autocomplete', [
             'apiKey' => $apiKey

@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('impostaziones', function (Blueprint $table) {
+        Schema::create('integraziones', function (Blueprint $table) {
             $table->id();
             $table->string('chiave')->unique();
-            $table->text('valore');
-            $table->string('tipo')->default('string'); // string, number, boolean, json
-            $table->string('descrizione')->nullable();
+            $table->text('valore')->nullable();
+            $table->string('tipo');
+            $table->text('descrizione')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('impostaziones');
+        Schema::dropIfExists('integraziones');
     }
 };

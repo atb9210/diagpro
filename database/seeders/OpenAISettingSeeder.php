@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 
 class OpenAISettingSeeder extends Seeder
 {
@@ -13,20 +13,20 @@ class OpenAISettingSeeder extends Seeder
      */
     public function run(): void
     {
-        // Verifica se l'impostazione esiste già
-        $existing = Impostazione::where('chiave', 'openai_api_key')->first();
+        // Verifica se l'integrazione esiste già
+        $existing = Integrazione::where('chiave', 'openai_api_key')->first();
         
         if (!$existing) {
-            Impostazione::create([
+            Integrazione::create([
                 'chiave' => 'openai_api_key',
                 'tipo' => 'password',
                 'valore' => '',
                 'descrizione' => 'Chiave API di OpenAI per integrazione con servizi AI'
             ]);
             
-            echo "Impostazione OpenAI API Key creata con successo!\n";
+            echo "Integrazione OpenAI API Key creata con successo!\n";
         } else {
-            echo "Impostazione OpenAI API Key già esistente.\n";
+            echo "Integrazione OpenAI API Key già esistente.\n";
         }
     }
 }

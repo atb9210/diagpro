@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 
 return new class extends Migration
 {
@@ -12,8 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Aggiungi l'impostazione per la chiave API OpenAI
-        Impostazione::create([
+        // Aggiungi l'integrazione per la chiave API OpenAI
+        Integrazione::create([
             'chiave' => 'openai_api_key',
             'valore' => '',
             'tipo' => 'password',
@@ -26,7 +26,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Rimuovi l'impostazione per la chiave API OpenAI
-        Impostazione::where('chiave', 'openai_api_key')->delete();
+        // Rimuovi l'integrazione per la chiave API OpenAI
+        Integrazione::where('chiave', 'openai_api_key')->delete();
     }
 };

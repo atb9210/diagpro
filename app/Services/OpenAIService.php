@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -25,7 +25,7 @@ class OpenAIService
      */
     private function getApiKey(): string
     {
-        $setting = Impostazione::where('chiave', 'openai_api_key')->first();
+        $setting = Integrazione::where('chiave', 'openai_api_key')->first();
         return $setting ? $setting->valore : '';
     }
 

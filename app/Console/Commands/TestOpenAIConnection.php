@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\OpenAIService;
-use App\Models\Impostazione;
+use App\Models\Integrazione;
 
 class TestOpenAIConnection extends Command
 {
@@ -15,15 +15,15 @@ class TestOpenAIConnection extends Command
     {
         $this->info('Testing OpenAI connection...');
         
-        // Verifica impostazione nel database
-        $setting = Impostazione::where('chiave', 'openai_api_key')->first();
+        // Verifica integrazione nel database
+        $setting = Integrazione::where('chiave', 'openai_api_key')->first();
         
         if (!$setting) {
-            $this->error('❌ Impostazione openai_api_key non trovata nel database');
+            $this->error('❌ Integrazione openai_api_key non trovata nel database');
             return 1;
         }
         
-        $this->info('✅ Impostazione trovata:');
+        $this->info('✅ Integrazione trovata:');
         $this->line('  - Chiave: ' . $setting->chiave);
         $this->line('  - Tipo: ' . $setting->tipo);
         $this->line('  - Valore: ' . (empty($setting->valore) ? 'VUOTO' : str_repeat('*', min(strlen($setting->valore), 20))));
